@@ -38,8 +38,10 @@
     }
 </style>
 <script>
+    let g_perPage = 10;
+
     $(document).ready(function () {
-        getList();
+        getList(1);
     });
 
     function openClose() {
@@ -54,23 +56,28 @@
 
     let url = 'https://4tq608eyf5.execute-api.ap-northeast-2.amazonaws.com/dev/bbs';
 
-    function getList() {
+    function getList(currPage) {
         let word = $("#word").val();
         $.ajax({
-            url: `${url}?type=list&word=${word}`,
+            url: `${url}?type=list&page=${currPage}&perPage=${g_perPage}&word=${word}`,
             method: "GET",
             success: function (result) {
                 clear()
-                let titleList = result['data'];
+                let titleList = result['data']['contents'];
+                let totalCount = result['data']['pageOptions']['totalCount'];
+                let currPage = result['data']['pageOptions']['currPage'];
+                let start = totalCount - ((currPage - 1) * g_perPage);
                 for (let i = 0; i < titleList.length; i++) {
                     let data = titleList[i]
                     $('#list').append(`<tr>
-                                            <th scope="row">3</th>
+                                            <th scope="row">${start - i}</th>
+                                            <td><input class="form-check-input" type="checkbox" name="idxs" value="${data['idx']}"></td>
                                             <td><a href="#" onclick="getContent(${data['idx']})">${data['title']}</td>
                                             <td>${data['regDate']}</td>
                                         </tr>`);
                 }
 
+                setPage(currPage, result['data']['pageOptions']['totalPage'])
             },
         })
     }
@@ -78,6 +85,25 @@
     function clear() {
         $('#list').empty();
         $('#page').empty();
+    }
+
+    function setPerPage(perPage, target) {
+        g_perPage = perPage;
+        for (let i = 0; i < $("#select_perPage").find('li').length; i++) {
+            $("#select_perPage").find('li:eq(' + i + ')').find('a').removeAttr("href");
+        }
+        $(target).attr("href", "#");
+        getList(1, perPage)
+    }
+
+    function setPage(currPage, totalPage) {
+        for (let i = 0; i < totalPage; i++) {
+            if (currPage == i + 1) {
+                $('#page').append(`<li class="page-item"><a class="page-link" href="#" onclick="getList(${i + 1}, ${g_perPage})">${i + 1}</a></li>`);
+            } else {
+                $('#page').append(`<li class="page-item"><a class="page-link" onclick="getList(${i + 1}, ${g_perPage})">${i + 1}</a></li>`);
+            }
+        }
     }
 
     function writeContent() {
@@ -96,6 +122,7 @@
     }
 
     function getContent(idx) {
+        g_idx = idx;
         $.ajax({
             url: `${url}?type=read&idx=${idx}`,
             method: "GET",
@@ -103,6 +130,34 @@
                 $("#readTitle").html(result['data']['title'])
                 $("#readContent").html(result['data']['content'])
                 $('#exampleModal').modal('toggle')
+            },
+        })
+    }
+
+    let g_idx = 0;
+
+    function deleteContent() {
+        $.ajax({
+            url: `${url}?type=delete&idx=${g_idx}`,
+            method: "DELETE",
+            success: function (result) {
+                $('#exampleModal').modal('toggle');
+                getList(1);
+            },
+        })
+    }
+
+    function deleteAllContent() {
+        var checkedAry = [];
+        $.each($("input[name='idxs']:checked"), function () {
+            checkedAry.push($(this).val());
+        });
+        console.log(checkedAry);
+        $.ajax({
+            url: `${url}?type=deleteAll&idxs=${checkedAry}`,
+            method: "DELETE",
+            success: function (result) {
+                getList(1);
             },
         })
     }
@@ -134,14 +189,20 @@
     <nav aria-label="Page navigation example">
         <div class="form-inline md-form mr-auto mb-4">
             <input class="form-control mr-sm-2" type="text" id="word" placeholder="Search" aria-label="Search">
-            <button class="btn aqua-gradient btn-rounded btn-sm my-0" onclick="getList()">Search</button>
+            <button class="btn aqua-gradient btn-rounded btn-sm my-0" onclick="getList(1)">Search</button>
         </div>
+        <ul class="pagination justify-content-end" id="select_perPage">
+            <li class="page-item"><a class="page-link" onclick="setPerPage(5,this)">5</a></li>
+            <li class="page-item"><a class="page-link" onclick="setPerPage(10,this)">10</a></li>
+            <li class="page-item"><a class="page-link" onclick="setPerPage(20,this)">20</a></li>
+        </ul>
     </nav>
     <div id="cards-box">
         <table class="table">
             <thead>
             <tr>
                 <th scope="col">#</th>
+                <th scope="col"></th>
                 <th scope="col">타이틀</th>
                 <th scope="col">등록일자</th>
             </tr>
@@ -149,6 +210,17 @@
             <tbody id="list">
             </tbody>
         </table>
+    </div>
+    <div>
+        <nav aria-label="Page navigation example">
+            <div class="form-inline md-form mr-auto mb-4">
+                <button class="btn aqua-gradient btn-danger btn-sm my-0" onclick="deleteAllContent()">삭제</button>
+            </div>
+            <ul class="pagination justify-content-center" id="page">
+                <li class="page-item disabled">
+                </li>
+            </ul>
+        </nav>
     </div>
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
@@ -164,6 +236,7 @@
                 <div class="modal-body" id="readContent">
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="deleteContent()">Delete</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
