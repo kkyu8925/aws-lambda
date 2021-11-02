@@ -59,7 +59,7 @@ Resources:
             - Sid: AWSSecretsManagerGetSecretValuePolicy
               Effect: Allow
               Action: secretsmanager:GetSecretValue
-              Resource: arn:aws:secretsmanager:ap-northeast-2:240977250919:secret:rds-secret-01-MiGxsJ
+              Resource: # AWS Secrets Manager 보안 암호 ARN
   BbsListFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -82,7 +82,53 @@ Resources:
             - Sid: AWSSecretsManagerGetSecretValuePolicy
               Effect: Allow
               Action: secretsmanager:GetSecretValue
-              Resource: arn:aws:secretsmanager:ap-northeast-2:240977250919:secret:rds-secret-01-MiGxsJ
+              Resource: # AWS Secrets Manager 보안 암호 ARN
+  BbsDeleteFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: bbs_delete/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        BbsDelete:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /delete
+            Method: delete
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-07dd1cca73df226c4
+        SubnetIds:
+          - subnet-6e7a8321
+      Policies:
+        - Statement:
+            - Sid: AWSSecretsManagerGetSecretValuePolicy
+              Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: # AWS Secrets Manager 보안 암호 ARN
+  BbsReadFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: bbs_read/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        BbsRead:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /read
+            Method: get
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-07dd1cca73df226c4
+        SubnetIds:
+          - subnet-6e7a8321
+      Policies:
+        - Statement:
+            - Sid: AWSSecretsManagerGetSecretValuePolicy
+              Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: # AWS Secrets Manager 보안 암호 ARN
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

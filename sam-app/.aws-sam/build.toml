@@ -25,4 +25,20 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["HelloWorldFunction"]
 
+[function_build_definitions.8e71c5de-9773-46cd-b9aa-476253bbe9c8]
+codeuri = "C:\\github\\aws-serverless\\sam-app\\bbs_delete"
+runtime = "python3.8"
+architecture = "x86_64"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["BbsDeleteFunction"]
+
+[function_build_definitions.5392157b-adc0-40b3-928f-53f2641ae2d3]
+codeuri = "C:\\github\\aws-serverless\\sam-app\\bbs_read"
+runtime = "python3.8"
+architecture = "x86_64"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["BbsReadFunction"]
+
 [layer_build_definitions]
