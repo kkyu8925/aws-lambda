@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  Sample SAM Template for sam-app
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3 # Lambda Function 제한 제한시간
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: hello_world/ # s3
+      Handler: app.lambda_handler # 핸들러명
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      Events:
+        HelloWorld:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /hello # http path
+            Method: get # http 메서드
+  #  TestWorldFunction:
+  #    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  #    Properties:
+  #      CodeUri: test_world/
+  #      Handler: app.lambda_handler
+  #      Runtime: python3.8
+  #      Events:
+  #        TestWorld:
+  #          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+  #          Properties:
+  #            Path: /test
+  #            Method: get
+  BbsWriteFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: bbs_write/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        BbsWrite:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /write
+            Method: post
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-07dd1cca73df226c4
+        SubnetIds:
+          - subnet-6e7a8321
+      Policies:
+        - Statement:
+            - Sid: AWSSecretsManagerGetSecretValuePolicy
+              Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: arn:aws:secretsmanager:ap-northeast-2:240977250919:secret:rds-secret-01-MiGxsJ
+  BbsListFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: bbs_list/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        BbsList:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /list
+            Method: get
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-07dd1cca73df226c4
+        SubnetIds:
+          - subnet-6e7a8321
+      Policies:
+        - Statement:
+            - Sid: AWSSecretsManagerGetSecretValuePolicy
+              Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: arn:aws:secretsmanager:ap-northeast-2:240977250919:secret:rds-secret-01-MiGxsJ
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  HelloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction.Arn
+  HelloWorldFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt HelloWorldFunctionRole.Arn
